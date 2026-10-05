@@ -7,6 +7,7 @@ app.set('trust proxy', 1);
 // Hosting providers assign their own port; 3000 is only the fallback for your computer
 const PORT = process.env.PORT || 3000;
 const db = new DatabaseSync('igowork.db');
+require('./db-init')(db);
 
 app.use(express.json());
 
