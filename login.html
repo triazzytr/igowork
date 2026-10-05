@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IGOwork - Sign in</title>
+<style>
+:root{--bg:#f5f5f7;--surface:#fff;--surface-2:#f0f0f2;--text:#1d1d1f;--muted:#6e6e73;--accent:#0071e3;--line:rgba(0,0,0,.07);--shadow:0 1px 2px rgba(0,0,0,.04),0 10px 28px rgba(0,0,0,.06);--ease:cubic-bezier(.4,0,.2,1)}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--surface:#1c1c1e;--surface-2:#242426;--text:#f5f5f7;--muted:#98989d;--line:rgba(255,255,255,.08);--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.45)}}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+header{background:rgba(255,255,255,.72);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--line)}
+@media(prefers-color-scheme:dark){header{background:rgba(28,28,30,.72)}}
+.nav{max-width:440px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:10px}
+.mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#0071e3,#5856d6);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+.brand{font-size:17px;font-weight:600}
+.wrap{max-width:440px;margin:0 auto;padding:40px 20px 60px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:24px}
+h2{font-size:23px;font-weight:700;letter-spacing:-.02em;margin:0}
+.muted{color:var(--muted)}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tab{flex:1;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:14px;padding:10px;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s var(--ease),color .2s var(--ease)}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+label{display:block;margin-top:14px;font-weight:600;font-size:13px}
+input,select{width:100%;font:inherit;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-top:5px}
+.btn{display:inline-block;border:0;border-radius:980px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;background:var(--accent);color:#fff;text-decoration:none;margin-top:18px;margin-right:8px;transition:transform .15s var(--ease)}
+.btn:active{transform:scale(.96)}
+.btn.ghost{background:var(--surface);color:var(--accent);border:1px solid var(--line)}
+#msg{margin-top:14px;font-weight:600;min-height:20px;font-size:14px}
+.welcome .btn{margin-top:20px}
+</style>
+</head>
+<body>
+<header><div class="nav"><div class="mark">IG</div><div class="brand">IGOwork</div></div></header>
+<div class="wrap">
+
+  <div id="welcome" class="card welcome" style="display:none">
+    <h2 id="who"></h2>
+    <p class="muted" id="what" style="margin-top:6px"></p>
+    <a class="btn" href="/app">Find artisans</a>
+    <button class="btn ghost" id="logout">Log out</button>
+  </div>
+
+  <div id="forms">
+    <div class="tabs">
+      <button class="tab on" id="tabIn">Log in</button>
+      <button class="tab" id="tabUp">Sign up</button>
+    </div>
+
+    <form class="card" id="inForm">
+      <h2>Welcome back</h2>
+      <label>Email<input name="email" type="email" autocomplete="email" required></label>
+      <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+      <button class="btn" type="submit">Log in</button>
+    </form>
+
+    <form class="card" id="upForm" style="display:none">
+      <h2>Create your account</h2>
+      <label>I am a
+        <select name="role" id="role">
+          <option value="client">Client (I need work done)</option>
+          <option value="artisan">Artisan (I offer services)</option>
+        </select>
+      </label>
+      <label>Full name<input name="full_name" autocomplete="name" required></label>
+      <label>Phone number<input name="phone" type="tel" autocomplete="tel" placeholder="e.g. 08012345678" required></label>
+      <label>Email<input name="email" type="email" autocomplete="email" required></label>
+      <label>Password (at least 8 characters)<input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
+
+      <div id="artisanFields" style="display:none">
+        <label>Trade
+          <select name="trade_category">
+            <option>plumber</option><option>electrician</option>
+            <option>carpenter</option><option>painter</option>
+          </select>
+        </label>
+        <label>Years of experience<input name="years_of_experience" type="number" min="0" value="0"></label>
+        <label>Service fee (Naira)<input name="service_fee" type="number" min="0"></label>
+        <label>Latitude<input name="latitude" type="number" step="any"></label>
+        <label>Longitude<input name="longitude" type="number" step="any"></label>
+        <button class="btn ghost" type="button" id="loc">Use my current location</button>
+      </div>
+
+      <button class="btn" type="submit">Create account</button>
+    </form>
+
+    <p id="msg"></p>
+  </div>
+</div>
+
+<script>
+var $ = function (id) { return document.getElementById(id); };
+function say(text, bad) { $('msg').textContent = text; $('msg').style.color = bad ? '#ff3b30' : 'inherit'; }
+function post(url, data) {
+  return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data || {}) })
+    .then(function (r) { return r.json(); });
+}
+function showAccount(a) {
+  $('who').textContent = 'Welcome, ' + a.full_name;
+  $('what').textContent = 'Signed in as ' + a.email + ' (' + a.role + ')';
+  if (a.role === 'artisan') { location.href = '/dashboard'; return; }
+  $('welcome').style.display = 'block';
+  $('forms').style.display = 'none';
+}
+function showForms() { $('welcome').style.display = 'none'; $('forms').style.display = 'block'; }
+function tab(login) {
+  $('inForm').style.display = login ? 'block' : 'none';
+  $('upForm').style.display = login ? 'none' : 'block';
+  $('tabIn').classList.toggle('on', login);
+  $('tabUp').classList.toggle('on', !login);
+  say('');
+}
+$('tabIn').onclick = function () { tab(true); };
+$('tabUp').onclick = function () { tab(false); };
+$('role').onchange = function () { $('artisanFields').style.display = this.value === 'artisan' ? 'block' : 'none'; };
+$('loc').onclick = function () {
+  navigator.geolocation.getCurrentPosition(function (p) {
+    $('upForm').latitude.value = p.coords.latitude; $('upForm').longitude.value = p.coords.longitude;
+  }, function () { say('Could not get your location. Please type it in.', true); });
+};
+function formData(form) { var data = {}; new FormData(form).forEach(function (v, k) { data[k] = v; }); return data; }
+
+$('inForm').onsubmit = function (e) {
+  e.preventDefault();
+  post('/api/login', formData(this)).then(function (j) {
+    if (j.error) { say(j.error, true); } else { say(''); showAccount(j.account); }
+  });
+};
+$('upForm').onsubmit = function (e) {
+  e.preventDefault();
+  post('/api/signup', formData(this)).then(function (j) {
+    if (j.error) { say(j.error, true); } else { say(''); showAccount(j.account); }
+  });
+};
+$('logout').onclick = function () { post('/api/logout').then(function () { tab(true); showForms(); }); };
+
+fetch('/api/me').then(function (r) { return r.json(); }).then(function (j) {
+  if (j.account) { showAccount(j.account); } else { showForms(); }
+});
+</script>
+</body>
+</html>

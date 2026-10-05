@@ -1,0 +1,17 @@
+{
+  "name": "igowork",
+  "version": "1.0.0",
+  "description": "IGOWork is a comprehensive artisan booking application that connects clients with skilled service providers (plumbers, electricians, carpenters, etc.) based on proximity, experience, and pricing.",
+  "main": "igowork-examples.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}

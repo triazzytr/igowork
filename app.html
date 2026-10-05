@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IGOwork</title>
+<style>
+:root{--bg:#f5f5f7;--surface:#fff;--surface-2:#f0f0f2;--text:#1d1d1f;--muted:#6e6e73;--accent:#0071e3;--line:rgba(0,0,0,.07);--shadow:0 1px 2px rgba(0,0,0,.04),0 10px 28px rgba(0,0,0,.06);--ease:cubic-bezier(.4,0,.2,1)}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--surface:#1c1c1e;--surface-2:#242426;--text:#f5f5f7;--muted:#98989d;--line:rgba(255,255,255,.08);--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.45)}}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.72);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--line)}
+@media(prefers-color-scheme:dark){header{background:rgba(28,28,30,.72)}}
+.nav{max-width:720px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:10px}
+.mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#0071e3,#5856d6);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;flex:none}
+.brand{font-size:17px;font-weight:600}
+.acct{margin-left:auto;font-size:13px;color:var(--muted);text-align:right;line-height:1.4}
+.acct a{color:var(--accent);text-decoration:none;font-weight:500}
+.wrap{max-width:720px;margin:0 auto;padding:44px 20px 80px}
+h1{font-size:36px;font-weight:700;letter-spacing:-.02em;margin:0;line-height:1.1}
+.lede{color:var(--muted);font-size:17px;margin:10px 0 28px}
+.segment{display:flex;gap:2px;background:var(--surface-2);border-radius:980px;padding:3px;overflow-x:auto}
+.segment button{flex:none;border:0;background:transparent;padding:9px 18px;border-radius:980px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:background .2s var(--ease),color .2s var(--ease)}
+.segment button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center}
+.btn{appearance:none;border:0;border-radius:980px;padding:11px 20px;font-size:14px;font-weight:600;cursor:pointer;background:var(--accent);color:#fff;transition:transform .15s var(--ease),opacity .15s var(--ease)}
+.btn:active{transform:scale(.96)}
+.btn.ghost{background:var(--surface);color:var(--accent);border:1px solid var(--line)}
+select{font:inherit;font-size:13px;font-weight:600;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:980px;padding:10px 14px}
+#status{margin:24px 0 14px;color:var(--muted);font-size:13.5px}
+.result{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:18px 20px;margin-bottom:14px;box-shadow:var(--shadow);transition:transform .25s var(--ease)}
+.rtop{display:flex;align-items:center;gap:14px}
+.avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#34c8ff,#0071e3);display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px;flex:none}
+.rname{font-size:16px;font-weight:600}
+.rtrade{font-size:13px;color:var(--muted);text-transform:capitalize}
+.rrating{margin-left:auto;text-align:right;font-weight:600;font-size:14px}
+.new{background:rgba(52,199,89,.13);color:#248a3d;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:700}
+.rfacts{display:flex;flex-wrap:wrap;gap:6px 16px;margin:14px 0;font-size:13px;color:var(--muted)}
+.rbottom{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--line)}
+.rfee{font-size:19px;font-weight:700;letter-spacing:-.02em}
+.empty{text-align:center;color:var(--muted);padding:40px 20px;border:1px dashed var(--line);border-radius:22px;font-size:14px}
+#sheetbg{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:flex-end;justify-content:center;z-index:30;opacity:0;transition:opacity .25s var(--ease)}
+#sheetbg.on{display:flex;opacity:1}
+.sheet{background:var(--surface);width:100%;max-width:560px;border-radius:28px 28px 0 0;padding:28px 22px 32px;transform:translateY(16px);transition:transform .3s var(--ease)}
+#sheetbg.on .sheet{transform:translateY(0)}
+.sheet h2{font-size:21px;margin:0 0 4px}
+.sheet input{width:100%;font:inherit;padding:12px 14px;margin-top:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2);color:var(--text)}
+.sheet .row{display:flex;gap:10px;margin-top:18px}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(8px);opacity:0;background:rgba(29,29,31,.92);backdrop-filter:blur(10px);color:#fff;padding:13px 20px;border-radius:14px;font-size:13px;font-weight:500;z-index:40;transition:opacity .25s var(--ease),transform .25s var(--ease);max-width:90%;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.links{display:flex;gap:18px;margin-top:44px}
+.links a{color:var(--accent);text-decoration:none;font-size:14px;font-weight:500}
+</style>
+</head>
+<body>
+<header><div class="nav"><div class="mark">IG</div><div class="brand">IGOwork</div>
+  <div class="acct" id="acct"></div>
+</div></header>
+
+<div class="wrap">
+  <h1>Find trusted artisans near you</h1>
+  <p class="lede">Plumbers, electricians, carpenters and more, within walking distance.</p>
+
+  <div class="segment" id="chips">
+    <button class="on" data-trade="">All</button>
+    <button data-trade="plumber">Plumber</button>
+    <button data-trade="electrician">Electrician</button>
+    <button data-trade="carpenter">Carpenter</button>
+    <button data-trade="painter">Painter</button>
+  </div>
+  <div class="controls">
+    <button class="btn" id="loc">Use my location</button>
+    <button class="btn ghost" id="demo">Demo location</button>
+    <select id="radius">
+      <option value="3">Within 3 km</option>
+      <option value="10">Within 10 km</option>
+      <option value="25">Within 25 km</option>
+      <option value="50">Within 50 km</option>
+    </select>
+    <select id="sort">
+      <option value="rank">Recommended</option>
+      <option value="rating">Top rated</option>
+      <option value="price">Lowest price</option>
+      <option value="near">Nearest</option>
+    </select>
+  </div>
+
+  <div id="status"></div>
+  <div id="results"></div>
+
+  <div class="links"><a href="/login">Account</a><a href="/bookings">My jobs</a></div>
+</div>
+
+<div id="sheetbg">
+  <div class="sheet">
+    <h2 id="sheetName"></h2>
+    <div style="color:var(--muted);font-size:14px">What do you need done?</div>
+    <input id="job" placeholder="e.g. Fix leaking kitchen tap" maxlength="120">
+    <div class="row">
+      <button class="btn" id="send">Send booking</button>
+      <button class="btn ghost" id="cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+var DEMO = { lat: 9.0765, lng: 7.3986 };
+var pos = DEMO, usingDemo = true, trade = '', list = [], current = null;
+var $ = function (id) { return document.getElementById(id); };
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function naira(n) { return '\u20A6' + Number(n).toLocaleString('en-NG'); }
+function initials(n) { return n.split(' ').filter(Boolean).slice(0, 2).map(function (w) { return w[0].toUpperCase(); }).join(''); }
+function rating(a) {
+  if (!a.total_ratings) return '<span class="new">New</span>';
+  return '\u2605 ' + Number(a.average_rating).toFixed(1) + ' <span style="color:var(--muted)">(' + a.total_ratings + ')</span>';
+}
+function toast(t) {
+  var el = $('toast'); el.textContent = t; el.classList.add('on');
+  setTimeout(function () { el.classList.remove('on'); }, 3500);
+}
+
+function sortList(arr) {
+  var mode = $('sort').value, a = arr.slice();
+  if (mode === 'rating') {
+    a.sort(function (x, y) {
+      var rx = x.total_ratings ? x.average_rating : 0, ry = y.total_ratings ? y.average_rating : 0;
+      return (ry - rx) || (y.total_ratings - x.total_ratings);
+    });
+  } else if (mode === 'price') { a.sort(function (x, y) { return x.service_fee - y.service_fee; }); }
+  else if (mode === 'near') { a.sort(function (x, y) { return x.distance_km - y.distance_km; }); }
+  return a;
+}
+
+function render() {
+  if (!list.length) {
+    $('results').innerHTML = '<div class="empty">No artisans found here.<br>Try a wider distance, or tap "Demo location".</div>';
+    return;
+  }
+  $('results').innerHTML = list.map(function (a) {
+    return '<div class="result"><div class="rtop"><div class="avatar">' + esc(initials(a.full_name)) + '</div>' +
+      '<div><div class="rname">' + esc(a.full_name) + '</div><div class="rtrade">' + esc(a.trade_category) + '</div></div>' +
+      '<div class="rrating">' + rating(a) + '</div></div>' +
+      '<div class="rfacts"><span>' + a.years_of_experience + ' yrs experience</span>' +
+      '<span>' + a.total_jobs_completed + ' jobs done</span><span>' + a.distance_km + ' km away</span></div>' +
+      '<div class="rbottom"><div><span class="rfee">' + naira(a.service_fee) + '</span> <span style="color:var(--muted);font-size:13px"> service fee</span></div>' +
+      '<button class="btn" onclick="openSheet(' + a.id + ')">Book</button></div></div>';
+  }).join('');
+}
+
+function search() {
+  $('status').textContent = 'Searching...';
+  var url = '/api/search?lat=' + pos.lat + '&lng=' + pos.lng + '&radius=' + $('radius').value +
+    (trade ? '&trade=' + encodeURIComponent(trade) : '');
+  fetch(url).then(function (r) { return r.json(); }).then(function (j) {
+    if (j.error) { $('status').textContent = j.error; return; }
+    list = sortList(j.artisans);
+    $('status').textContent = j.count + ' found near ' + (usingDemo ? 'the demo location (Abuja)' : 'you');
+    render();
+  }).catch(function () { $('status').textContent = 'Cannot reach the server. Is it still running?'; });
+}
+
+$('chips').onclick = function (e) {
+  if (e.target.tagName !== 'BUTTON') return;
+  document.querySelectorAll('#chips button').forEach(function (c) { c.classList.remove('on'); });
+  e.target.classList.add('on');
+  trade = e.target.dataset.trade;
+  search();
+};
+$('radius').onchange = search;
+$('sort').onchange = search;
+$('demo').onclick = function () { pos = DEMO; usingDemo = true; search(); };
+$('loc').onclick = function () {
+  if (!navigator.geolocation) { toast('Location is not supported here.'); return; }
+  $('status').textContent = 'Finding your location...';
+  navigator.geolocation.getCurrentPosition(function (p) {
+    pos = { lat: p.coords.latitude, lng: p.coords.longitude }; usingDemo = false; search();
+  }, function () { $('status').textContent = ''; toast('Could not get your location.'); }, { timeout: 10000 });
+};
+
+function openSheet(id) {
+  current = list.filter(function (a) { return a.id === id; })[0];
+  $('sheetName').textContent = 'Book ' + current.full_name;
+  $('job').value = '';
+  $('sheetbg').classList.add('on');
+  $('job').focus();
+}
+function closeSheet() { $('sheetbg').classList.remove('on'); }
+$('cancel').onclick = closeSheet;
+$('sheetbg').onclick = function (e) { if (e.target === this) closeSheet(); };
+
+$('send').onclick = function () {
+  fetch('/api/bookings', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ artisan_id: current.id, title: $('job').value })
+  }).then(function (r) { return r.json(); }).then(function (j) {
+    if (j.error) { toast(j.error); return; }
+    closeSheet();
+    toast('Booking #' + j.booking.id + ' sent to ' + current.full_name);
+  });
+};
+
+fetch('/api/me').then(function (r) { return r.json(); }).then(function (j) {
+  var a = j.account;
+  $('acct').innerHTML = a
+    ? esc(a.full_name) + ' <span style="font-weight:700;color:var(--accent)">&middot; ' + a.role + '</span><br><a href="/login">Account</a>'
+    : '<a href="/login">Log in</a>';
+});
+
+search();
+</script>
+</body>
+</html>

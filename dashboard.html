@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IGOwork - Dashboard</title>
+<style>
+:root{--bg:#f5f5f7;--surface:#fff;--surface-2:#f0f0f2;--text:#1d1d1f;--muted:#6e6e73;--accent:#0071e3;--line:rgba(0,0,0,.07);--shadow:0 1px 2px rgba(0,0,0,.04),0 10px 28px rgba(0,0,0,.06);--ease:cubic-bezier(.4,0,.2,1)}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--surface:#1c1c1e;--surface-2:#242426;--text:#f5f5f7;--muted:#98989d;--line:rgba(255,255,255,.08);--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.45)}}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.72);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--line)}
+@media(prefers-color-scheme:dark){header{background:rgba(28,28,30,.72)}}
+.nav{max-width:680px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:10px}
+.mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#0071e3,#5856d6);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;flex:none}
+.brand{font-size:17px;font-weight:600}
+.acct{margin-left:auto;font-size:13px;color:var(--muted);text-align:right;line-height:1.4}
+.acct a{color:var(--accent);text-decoration:none;font-weight:500}
+.badge{display:inline-block;background:rgba(0,113,227,.12);color:var(--accent);border-radius:999px;padding:2px 9px;font-size:11px;font-weight:700}
+.wrap{max-width:680px;margin:0 auto;padding:40px 20px 80px}
+h1{font-size:32px;font-weight:700;letter-spacing:-.02em;margin:0}
+.lede{color:var(--muted);font-size:16px;margin:8px 0 0}
+#msg{min-height:20px;margin:16px 0 0;font-weight:600;font-size:14px}
+section{margin-top:36px}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin:0 0 12px;display:flex;gap:8px;align-items:center}
+.count{background:var(--surface-2);border-radius:999px;padding:1px 8px;font-size:11px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:12px}
+.jtitle{font-size:16px;font-weight:600}
+.jmeta{color:var(--muted);font-size:13px;margin-top:4px}
+.note{color:var(--muted);font-size:13.5px;margin-top:12px}
+.contact{margin-top:12px;font-size:14px}
+.contact a{color:var(--accent);text-decoration:none;font-weight:600}
+.row{margin-top:14px;display:flex;gap:10px}
+.stars{display:flex;gap:4px;margin:12px 0 10px}
+.star{border:0;background:none;font-size:24px;line-height:1;color:var(--line);cursor:pointer;padding:0;transition:color .15s var(--ease),transform .15s var(--ease)}
+.star.on{color:#ff9500;transform:scale(1.08)}
+.btn{appearance:none;border:0;border-radius:980px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;background:var(--accent);color:#fff;transition:transform .15s var(--ease),opacity .15s var(--ease)}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.danger{background:transparent;color:#ff3b30;border:1px solid var(--line)}
+.empty{text-align:center;color:var(--muted);padding:32px 18px;border:1px dashed var(--line);border-radius:20px;font-size:14px}
+.profile{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:6px 20px}
+.line{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
+.line:last-child{border-bottom:0}
+.line span:first-child{color:var(--muted)}
+</style>
+</head>
+<body>
+<header><div class="nav"><div class="mark">IG</div><div class="brand">IGOwork</div>
+  <div class="acct"><span id="name"></span> <span class="badge">Artisan</span><br><a href="#" id="logout">Log out</a></div>
+</div></header>
+
+<div class="wrap">
+  <h1>My dashboard</h1>
+  <p class="lede">Your requests, jobs in progress, and completed work.</p>
+  <p id="msg"></p>
+
+  <section><h2>New requests <span class="count" id="nReq"></span></h2><div id="requests"></div></section>
+  <section><h2>In progress</h2><div id="active"></div></section>
+  <section><h2>Completed</h2><div id="done"></div></section>
+  <section><h2>Account details</h2><div class="profile" id="profile"></div></section>
+</div>
+
+<script>
+var $ = function (id) { return document.getElementById(id); };
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function post(url, data) {
+  return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data || {}) })
+    .then(function (r) { return r.json(); });
+}
+function say(text, bad) { $('msg').textContent = text; $('msg').style.color = bad ? '#ff3b30' : 'inherit'; }
+function naira(n) { return '\u20A6' + Number(n).toLocaleString('en-NG'); }
+function line(label, value) { return '<div class="line"><span>' + label + '</span><span>' + value + '</span></div>'; }
+
+function loadProfile() {
+  fetch('/api/my-profile').then(function (r) { return r.json(); }).then(function (j) {
+    if (j.error) { say(j.error, true); return; }
+    var p = j.profile;
+    $('name').textContent = p.full_name;
+    var rating = p.total_ratings ? '\u2605 ' + Number(p.average_rating).toFixed(1) + ' (' + p.total_ratings + ')' : 'No ratings yet';
+    $('profile').innerHTML =
+      line('Name', esc(p.full_name)) + line('Email', esc(p.email)) + line('Account type', 'Artisan') +
+      line('Trade', '<span style="text-transform:capitalize">' + esc(p.trade_category) + '</span>') +
+      line('Experience', p.years_of_experience + ' years') + line('Service fee', naira(p.service_fee)) +
+      line('Rating', rating) + line('Jobs completed', p.total_jobs_completed);
+  });
+}
+
+function card(b) {
+  var html = '<div class="card"><div class="jtitle">' + esc(b.title) + '</div><div class="jmeta">Client: ' + esc(b.client_name) + '</div>';
+  if (b.status === 'pending') {
+    html += '<div class="row"><button class="btn" data-act="accept" data-id="' + b.id + '">Accept</button>' +
+      '<button class="btn danger" data-act="decline" data-id="' + b.id + '">Decline</button></div>';
+  } else if (b.status === 'accepted') {
+    html += '<div class="contact">Phone: ' + (b.contact_phone
+      ? '<a href="tel:' + esc(b.contact_phone) + '">' + esc(b.contact_phone) + '</a>'
+      : '<span class="note" style="display:inline">not on file yet</span>') + '</div>';
+    html += '<div class="row"><button class="btn" data-act="complete" data-id="' + b.id + '">Mark complete</button></div>';
+  } else if (b.status === 'completed') {
+    if (b.my_stars) {
+      html += '<div class="note">You rated the client ' + b.my_stars + ' / 5.' +
+        (b.their_stars ? ' They rated you ' + b.their_stars + ' / 5.' : ' Their rating appears once they rate too.') + '</div>';
+    } else {
+      html += '<div class="stars" data-id="' + b.id + '" data-value="0">' +
+        [1,2,3,4,5].map(function (n) { return '<button class="star" data-n="' + n + '">\u2605</button>'; }).join('') +
+        '</div><button class="btn" data-act="rate" data-id="' + b.id + '" disabled>Submit rating</button>';
+    }
+  }
+  return html + '</div>';
+}
+
+function loadJobs() {
+  fetch('/api/bookings').then(function (r) { return r.json(); }).then(function (j) {
+    if (j.error) { say(j.error, true); return; }
+    var pending = j.bookings.filter(function (b) { return b.status === 'pending'; });
+    var active = j.bookings.filter(function (b) { return b.status === 'accepted'; });
+    var done = j.bookings.filter(function (b) { return b.status === 'completed'; });
+
+    $('nReq').textContent = pending.length || '';
+    $('requests').innerHTML = pending.length ? pending.map(card).join('') : '<div class="empty">No new requests right now.</div>';
+    $('active').innerHTML = active.length ? active.map(card).join('') : '<div class="empty">Nothing in progress.</div>';
+    $('done').innerHTML = done.length ? done.map(card).join('') : '<div class="empty">No completed jobs yet.</div>';
+  });
+}
+
+document.body.addEventListener('click', function (e) {
+  if (e.target.classList.contains('star')) {
+    var box = e.target.parentElement;
+    var n = parseInt(e.target.dataset.n, 10);
+    box.dataset.value = n;
+    Array.prototype.forEach.call(box.querySelectorAll('.star'), function (s) {
+      s.classList.toggle('on', parseInt(s.dataset.n, 10) <= n);
+    });
+    var btn = box.nextElementSibling;
+    if (btn) btn.disabled = false;
+    return;
+  }
+  var act = e.target.dataset && e.target.dataset.act;
+  if (!act) return;
+  var id = e.target.dataset.id;
+  if (act === 'accept' || act === 'decline') {
+    post('/api/bookings/' + id + '/' + act).then(function (j) {
+      say(j.error ? j.error : 'Job #' + id + (act === 'accept' ? ' accepted.' : ' declined.'), !!j.error);
+      loadJobs();
+    });
+  } else if (act === 'complete') {
+    post('/api/bookings/' + id + '/complete').then(function (j) {
+      say(j.error ? j.error : 'Job #' + id + ' marked complete.', !!j.error);
+      loadJobs(); loadProfile();
+    });
+  } else if (act === 'rate') {
+    var box = document.querySelector('.stars[data-id="' + id + '"]');
+    var value = box ? box.dataset.value : 0;
+    post('/api/bookings/' + id + '/rate', { stars: value }).then(function (j) {
+      say(j.error ? j.error : j.message, !!j.error);
+      loadJobs();
+    });
+  }
+});
+
+$('logout').onclick = function (e) { e.preventDefault(); post('/api/logout').then(function () { location.href = '/login'; }); };
+
+loadProfile();
+loadJobs();
+</script>
+</body>
+</html>
