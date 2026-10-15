@@ -65,6 +65,7 @@ app.get('/api/search', (req, res) => {
 });
 
 app.use(require('./notifications')(db));
+app.use(require('./push')(db));
 app.use(require('./dashboard')(db));
 app.use(require('./bookings')(db));
 app.use(require('./ratings')(db));

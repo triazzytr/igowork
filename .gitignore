@@ -2,3 +2,4 @@ node_modules/
 igowork.db
 *.before-*
 *.backup*
+vapid-keys.json

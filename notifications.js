@@ -16,6 +16,14 @@ function notify(db, accountId, type, title, body, link) {
       'INSERT INTO notifications (account_id, type, title, body, link) VALUES (?, ?, ?, ?, ?)'
     ).run(accountId, type, title, body || null, link || null);
 
+    // Also alert the person's phone or computer (never blocks the caller)
+    require('./push').send(db, accountId, {
+      title: title,
+      body: body || '',
+      url: link || '/',
+      tag: type + ':' + (link || '')
+    });
+
     // Keep only each person's latest 100
     db.prepare(`
       DELETE FROM notifications

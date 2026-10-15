@@ -7,6 +7,8 @@
   var lastId = null;           // newest notification already seen
   var data = { unread: 0, notifications: [] };
   var timer = null;
+  var pushChecked = false;
+  var push = { state: 'unsupported', key: null, busy: false, note: '' };
 
   // ---------- styles (use each page's own colours) ----------
   var css =
@@ -27,6 +29,7 @@
     '.ig-time{font-size:11px;color:var(--muted);margin-top:4px}' +
     '.ig-empty{padding:28px 16px;text-align:center;color:var(--muted);font-size:14px;border-top:1px solid var(--line)}' +
     '.ig-ask{padding:0 16px 12px}' +
+    '.ig-ask .ig-body{margin:0 0 6px}' +
     '.ig-toasts{position:fixed;top:68px;right:12px;width:min(340px,calc(100vw - 24px));display:flex;flex-direction:column;gap:8px;z-index:300;pointer-events:none}' +
     '.ig-toast{pointer-events:auto;cursor:pointer;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:0 12px 40px rgba(0,0,0,.2);animation:igin .3s cubic-bezier(.4,0,.2,1);transition:opacity .25s,transform .25s}' +
     '.ig-toast.out{opacity:0;transform:translateY(-6px)}' +
@@ -93,6 +96,90 @@
     }
   }
 
+  // ---------- device alerts (Web Push) ----------
+  function pushSupported() {
+    return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  }
+
+  function b64ToBytes(s) {
+    var pad = '='.repeat((4 - s.length % 4) % 4);
+    var raw = atob((s + pad).replace(/-/g, '+').replace(/_/g, '/'));
+    var out = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+  }
+
+  function getRegistration() {
+    return navigator.serviceWorker.register('/sw.js').then(function () {
+      return navigator.serviceWorker.ready;
+    });
+  }
+
+  function sendSubscription(sub) {
+    return post('/api/push/subscribe', sub.toJSON()).then(function (r) {
+      if (!r.ok) throw new Error('subscribe failed');
+    });
+  }
+
+  // Works out whether alerts are on for this device, and keeps the server in sync
+  function refreshPush() {
+    if (!pushSupported()) { push.state = 'unsupported'; render(); return Promise.resolve(); }
+
+    return fetch('/api/push/key')
+      .then(function (r) { return r.json(); })
+      .then(function (k) {
+        if (!k.enabled) { push.state = 'unsupported'; return; }
+        push.key = k.key;
+        if (Notification.permission === 'denied') { push.state = 'blocked'; return; }
+
+        return getRegistration().then(function (reg) {
+          return reg.pushManager.getSubscription().then(function (sub) {
+            if (!sub || Notification.permission !== 'granted') { push.state = 'off'; return; }
+            // Re-link this device to the current login (also repairs a reset database)
+            return sendSubscription(sub).then(
+              function () { push.state = 'on'; },
+              function () { push.state = 'off'; }
+            );
+          });
+        });
+      })
+      .catch(function () {})
+      .then(render);
+  }
+
+  function enablePush() {
+    if (push.busy) return;
+    push.busy = true;
+    push.note = '';
+    Notification.requestPermission()
+      .then(function (perm) {
+        if (perm !== 'granted') return;
+        return getRegistration().then(function (reg) {
+          return reg.pushManager.getSubscription().then(function (existing) {
+            return existing || reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: b64ToBytes(push.key)
+            });
+          });
+        }).then(sendSubscription);
+      })
+      .catch(function () { push.note = 'Could not turn on alerts on this device.'; })
+      .then(function () { push.busy = false; return refreshPush(); });
+  }
+
+  function disablePush() {
+    getRegistration()
+      .then(function (reg) { return reg.pushManager.getSubscription(); })
+      .then(function (sub) {
+        if (!sub) return;
+        return post('/api/push/unsubscribe', { endpoint: sub.endpoint }).then(function () {
+          return sub.unsubscribe();
+        });
+      })
+      .catch(function () {})
+      .then(refreshPush);
+  }
+
   function render() {
     var n = data.unread;
     badge.textContent = n > 99 ? '99+' : String(n);
@@ -100,15 +187,20 @@
     document.title = (n ? '(' + n + ') ' : '') + baseTitle;
     markAll.style.display = n ? '' : 'none';
 
-    // Offer desktop alerts once, if the browser supports them
     ask.textContent = '';
-    if ('Notification' in window && Notification.permission === 'default') {
-      var b = el('button', 'ig-link', 'Turn on desktop alerts');
-      b.onclick = function () {
-        Notification.requestPermission().then(render);
-      };
-      ask.appendChild(b);
+    if (push.state === 'off') {
+      var on = el('button', 'ig-link', 'Turn on alerts on this device');
+      on.onclick = enablePush;
+      ask.appendChild(on);
+    } else if (push.state === 'on') {
+      ask.appendChild(el('div', 'ig-body', 'Alerts are on for this device.'));
+      var off = el('button', 'ig-link', 'Turn off');
+      off.onclick = disablePush;
+      ask.appendChild(off);
+    } else if (push.state === 'blocked') {
+      ask.appendChild(el('div', 'ig-body', 'Alerts are blocked for this site. Allow notifications in your browser settings to turn them on.'));
     }
+    if (push.note) ask.appendChild(el('div', 'ig-body', push.note));
 
     list.textContent = '';
     if (!data.notifications.length) {
@@ -154,15 +246,6 @@
     }, 7000);
   }
 
-  // Desktop alert, only when the tab is in the background
-  function desktop(x) {
-    if (!('Notification' in window) || Notification.permission !== 'granted') return;
-    try {
-      var n = new Notification(x.title, { body: x.body || '' });
-      n.onclick = function () { window.focus(); n.close(); go(x); };
-    } catch (e) {}
-  }
-
   // ---------- checking for new notifications ----------
   function poll() {
     fetch('/api/notifications')
@@ -179,6 +262,8 @@
         bell.classList.add('show');
         render();
 
+        if (!pushChecked) { pushChecked = true; refreshPush(); }
+
         var maxId = 0;
         j.notifications.forEach(function (x) { if (x.id > maxId) maxId = x.id; });
 
@@ -188,10 +273,8 @@
         var fresh = j.notifications.filter(function (x) { return x.id > lastId && !x.read; }).reverse();
         lastId = Math.max(lastId, maxId);
 
-        fresh.forEach(function (x) {
-          toast(x);
-          if (document.hidden) desktop(x);
-        });
+        // With device alerts on, the system notification covers it
+        if (push.state !== 'on') fresh.forEach(toast);
       })
       .catch(function () {});
   }
