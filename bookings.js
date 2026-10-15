@@ -1,4 +1,5 @@
 const express = require('express');
+const { notify } = require('./notifications');
 
 // Bookings: creation, listing, accept/decline, completion.
 // Freemium: contact details unlock for free as soon as the artisan accepts.
@@ -197,6 +198,7 @@ fetch('/api/me').then(function (r) { return r.json(); }).then(function (j) {
   loadJobs();
 });
 </script>
+<script src="/notify.js"></script>
 </body>
 </html>`;
 
@@ -231,6 +233,11 @@ fetch('/api/me').then(function (r) { return r.json(); }).then(function (j) {
     ).run(me.id, artisan.id, String(b.title).trim());
 
     const booking = db.prepare('SELECT * FROM bookings WHERE id = ?').get(result.lastInsertRowid);
+    // Tell the artisan a new request has arrived
+    const target = db.prepare('SELECT account_id FROM artisans WHERE id = ?').get(artisan.id);
+    notify(db, target && target.account_id, 'request', 'New booking request',
+      req.account.full_name + ': ' + String(b.title).trim().slice(0, 80), '/dashboard');
+
     res.status(201).json({ booking });
   });
 
@@ -298,6 +305,16 @@ fetch('/api/me').then(function (r) { return r.json(); }).then(function (j) {
       const result = db.prepare(
         "UPDATE bookings SET status = ? WHERE id = ? AND status = 'pending'"
       ).run(newStatus, id);
+      if (result.changes > 0) {
+        const owner = db.prepare('SELECT account_id FROM clients WHERE id = ?').get(booking.client_id);
+        if (newStatus === 'accepted') {
+          notify(db, owner && owner.account_id, 'accepted', 'Booking accepted',
+            req.account.full_name + ' accepted "' + booking.title + '". You can message them now.', '/chat/' + id);
+        } else {
+          notify(db, owner && owner.account_id, 'declined', 'Request declined',
+            req.account.full_name + ' could not take "' + booking.title + '".', '/bookings');
+        }
+      }
       if (result.changes === 0) {
         return res.status(400).json({ error: 'This request has already been answered.' });
       }
@@ -332,6 +349,10 @@ fetch('/api/me').then(function (r) { return r.json(); }).then(function (j) {
     }
 
     db.prepare("UPDATE bookings SET status = 'completed' WHERE id = ?").run(id);
+
+    const owner = db.prepare('SELECT account_id FROM clients WHERE id = ?').get(booking.client_id);
+    notify(db, owner && owner.account_id, 'completed', 'Job completed',
+      '"' + booking.title + '" is marked complete. Please leave a rating.', '/bookings');
     db.prepare(
       'UPDATE artisans SET total_jobs_completed = total_jobs_completed + 1 WHERE id = ?'
     ).run(booking.artisan_id);

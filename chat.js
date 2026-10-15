@@ -1,4 +1,5 @@
 const express = require('express');
+const { notify } = require('./notifications');
 const path = require('path');
 
 // Chat between the client and the artisan on one booking.
@@ -58,6 +59,10 @@ module.exports = function (db) {
       return res.status(404).json({ error: 'This chat is not available.' });
     }
 
+    // Opening the chat clears its notifications
+    db.prepare('UPDATE notifications SET read_at = CURRENT_TIMESTAMP WHERE account_id = ? AND link = ? AND read_at IS NULL')
+      .run(req.account.id, '/chat/' + job.booking.id);
+
     const after = parseInt(req.query.after, 10) || 0;
     const rows = after > 0
       ? db.prepare(
@@ -114,6 +119,11 @@ module.exports = function (db) {
     const result = db.prepare(
       'INSERT INTO messages (booking_id, sender_role, body) VALUES (?, ?, ?)'
     ).run(job.booking.id, job.side, body);
+
+    // Tell the other person about the new message
+    const recipient = job.side === 'client' ? job.booking.artisan_account : job.booking.client_account;
+    notify(db, recipient, 'message', 'New message from ' + req.account.full_name,
+      body.slice(0, 80), '/chat/' + job.booking.id);
 
     res.status(201).json({ id: Number(result.lastInsertRowid) });
   });

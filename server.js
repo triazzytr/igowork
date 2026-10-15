@@ -64,6 +64,7 @@ app.get('/api/search', (req, res) => {
   res.json({ count: results.length, artisans: results });
 });
 
+app.use(require('./notifications')(db));
 app.use(require('./dashboard')(db));
 app.use(require('./bookings')(db));
 app.use(require('./ratings')(db));
