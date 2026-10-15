@@ -139,7 +139,12 @@ function sortList(arr) {
 
 function render() {
   if (!list.length) {
-    $('results').innerHTML = '<div class="empty">No artisans found here.<br>Try a wider distance, or tap "Demo location".</div>';
+    var next = ['3', '10', '25', '50'].filter(function (v) { return Number(v) > Number($('radius').value); })[0];
+    $('results').innerHTML = '<div class="empty">No artisans found within ' + $('radius').value + ' km.' +
+      (next ? '<br><br><button class="btn" id="widen">Search within ' + next + ' km</button>' : '<br>Try a different trade, or tap "Demo location".') + '</div>';
+    if (next) {
+      $('widen').onclick = function () { $('radius').value = next; search(); };
+    }
     return;
   }
   $('results').innerHTML = list.map(function (a) {

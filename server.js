@@ -67,6 +67,7 @@ app.get('/api/search', (req, res) => {
 app.use(require('./dashboard')(db));
 app.use(require('./bookings')(db));
 app.use(require('./ratings')(db));
+app.use(require('./chat')(db));
 
 app.listen(PORT, () => {
   console.log('IGOwork running at http://localhost:' + PORT);

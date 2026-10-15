@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IGOwork - Messages</title>
+<style>
+:root{--bg:#f5f5f7;--surface:#fff;--surface-2:#f0f0f2;--text:#1d1d1f;--muted:#6e6e73;--accent:#0071e3;--line:rgba(0,0,0,.07);--ease:cubic-bezier(.4,0,.2,1)}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--surface:#1c1c1e;--surface-2:#242426;--text:#f5f5f7;--muted:#98989d;--line:rgba(255,255,255,.08)}}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;display:flex;flex-direction:column;height:100vh;height:100dvh;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+header,footer{flex:none;background:rgba(255,255,255,.72);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%)}
+@media(prefers-color-scheme:dark){header,footer{background:rgba(28,28,30,.72)}}
+header{border-bottom:1px solid var(--line)}
+footer{border-top:1px solid var(--line)}
+.nav{max-width:680px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:12px}
+.back{color:var(--accent);text-decoration:none;font-size:15px;font-weight:500;width:56px}
+.who{flex:1;text-align:center;min-width:0}
+.who .n{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who .t{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spacer{width:56px}
+#thread{flex:1;overflow-y:auto;width:100%;max-width:680px;margin:0 auto;padding:20px}
+.row{display:flex;flex-direction:column;margin-bottom:10px}
+.row.mine{align-items:flex-end}
+.row.theirs{align-items:flex-start}
+.bubble{max-width:78%;padding:10px 14px;border-radius:20px;font-size:15px;line-height:1.4;white-space:pre-wrap;overflow-wrap:anywhere;animation:pop .22s var(--ease)}
+.mine .bubble{background:var(--accent);color:#fff;border-bottom-right-radius:6px}
+.theirs .bubble{background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:6px}
+.time{font-size:11px;color:var(--muted);margin:3px 6px 0}
+@keyframes pop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
+#hint{display:none;text-align:center;color:var(--muted);font-size:14px;padding:48px 20px}
+#err{max-width:680px;margin:0 auto;padding:8px 20px 0;color:#ff3b30;font-size:13px;font-weight:600;min-height:8px}
+.composer{max-width:680px;margin:0 auto;padding:10px 20px calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px;align-items:flex-end}
+textarea{flex:1;resize:none;font:inherit;font-size:15px;line-height:1.35;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:10px 14px;max-height:120px;transition:border-color .2s var(--ease)}
+textarea:focus{outline:none;border-color:var(--accent)}
+.send{appearance:none;border:0;border-radius:980px;padding:11px 18px;font-size:14px;font-weight:600;cursor:pointer;background:var(--accent);color:#fff;transition:transform .15s var(--ease),opacity .15s var(--ease)}
+.send:active{transform:scale(.95)}
+.send:disabled{opacity:.4;cursor:default}
+#note{display:none;text-align:center;color:var(--muted);font-size:13px;padding:16px 20px calc(16px + env(safe-area-inset-bottom))}
+</style>
+</head>
+<body>
+<header><div class="nav">
+  <a class="back" id="back" href="/bookings">&lsaquo; Back</a>
+  <div class="who"><div class="n" id="name">Messages</div><div class="t" id="job"></div></div>
+  <div class="spacer"></div>
+</div></header>
+
+<div id="thread"><div id="hint">No messages yet. Say hello.</div></div>
+
+<footer>
+  <div id="err"></div>
+  <div class="composer" id="composer">
+    <textarea id="text" rows="1" maxlength="1000" placeholder="Message"></textarea>
+    <button class="send" id="send">Send</button>
+  </div>
+  <div id="note">This job is complete, so messages are read-only.</div>
+</footer>
+
+<script>
+var id = location.pathname.split('/').pop();
+var last = 0, busy = false, canSend = false, started = false, timer = null;
+var $ = function (x) { return document.getElementById(x); };
+
+function time(ts) {
+  var d = new Date(String(ts).replace(' ', 'T') + 'Z');
+  return isNaN(d) ? '' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function nearBottom() {
+  var t = $('thread');
+  return t.scrollHeight - t.scrollTop - t.clientHeight < 80;
+}
+function scrollDown() { var t = $('thread'); t.scrollTop = t.scrollHeight; }
+
+function add(m) {
+  var row = document.createElement('div');
+  row.className = 'row ' + (m.mine ? 'mine' : 'theirs');
+  var bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = m.body;            // textContent keeps messages safe from code injection
+  var t = document.createElement('div');
+  t.className = 'time';
+  t.textContent = time(m.created_at);
+  row.appendChild(bubble);
+  row.appendChild(t);
+  $('thread').appendChild(row);
+  if (m.id > last) last = m.id;
+}
+
+function setComposer() {
+  $('composer').style.display = canSend ? 'flex' : 'none';
+  $('note').style.display = canSend ? 'none' : 'block';
+  $('send').disabled = !canSend;
+  $('text').disabled = !canSend;
+}
+
+function fail(msg) {
+  clearInterval(timer);
+  $('hint').textContent = msg;
+  $('hint').style.display = 'block';
+  $('composer').style.display = 'none';
+}
+
+function load() {
+  if (busy) return;
+  busy = true;
+  fetch('/api/bookings/' + id + '/messages?after=' + last)
+    .then(function (r) {
+      if (r.status === 401) { location.href = '/login'; return null; }
+      return r.json();
+    })
+    .then(function (j) {
+      busy = false;
+      if (!j) return;
+      if (j.error) { fail(j.error); return; }
+
+      $('name').textContent = j.other_name;
+      $('job').textContent = j.title;
+      $('back').href = j.role === 'artisan' ? '/dashboard' : '/bookings';
+      canSend = j.can_send;
+      setComposer();
+
+      var stick = !started || nearBottom();
+      j.messages.forEach(add);
+      if (j.messages.length) { $('hint').style.display = 'none'; }
+      else if (!started) { $('hint').style.display = 'block'; }
+      started = true;
+
+      var mineLast = j.messages.length && j.messages[j.messages.length - 1].mine;
+      if (stick || mineLast) scrollDown();
+    })
+    .catch(function () { busy = false; });
+}
+
+function send() {
+  var text = $('text').value.trim();
+  if (!text || !canSend) return;
+  $('send').disabled = true;
+  fetch('/api/bookings/' + id + '/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ body: text })
+  })
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      setComposer();
+      if (j.error) { $('err').textContent = j.error; return; }
+      $('err').textContent = '';
+      $('text').value = '';
+      $('text').style.height = 'auto';
+      load();
+    })
+    .catch(function () {
+      setComposer();
+      $('err').textContent = 'Could not send. Check your connection.';
+    });
+}
+
+$('send').onclick = send;
+$('text').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+$('text').addEventListener('input', function () {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
+timer = setInterval(function () { if (!document.hidden) load(); }, 3000);
+load();
+</script>
+</body>
+</html>

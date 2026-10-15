@@ -139,6 +139,9 @@ function card(b) {
         '</div><button class="btn" data-act="rate" data-id="' + b.id + '" disabled>Submit rating</button>';
     }
   }
+  if (b.status === 'accepted' || b.status === 'completed') {
+    html += '<div class="note"><a href="/chat/' + b.id + '" style="color:var(--accent);font-weight:600;text-decoration:none">' + (b.status === 'accepted' ? 'Message' : 'View messages') + '</a></div>';
+  }
   return html + '</div>';
 }
 
