@@ -27,6 +27,14 @@ module.exports = function (db) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="IGOwork">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <title>My jobs - IGOwork</title>
 <style>
 :root{--bg:#f5f5f7;--surface:#fff;--surface-2:#f0f0f2;--text:#1d1d1f;--muted:#6e6e73;--accent:#0071e3;--line:rgba(0,0,0,.07);--shadow:0 1px 2px rgba(0,0,0,.04),0 10px 28px rgba(0,0,0,.06);--ease:cubic-bezier(.4,0,.2,1)}

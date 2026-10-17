@@ -11,6 +11,14 @@ require('./db-init')(db);
 
 app.use(express.json());
 
+// Installable app: the manifest and icons are public (no login needed)
+app.get('/manifest.webmanifest', (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.type('application/manifest+json');
+  res.sendFile(__dirname + '/manifest.webmanifest');
+});
+app.use('/icons', express.static(__dirname + '/icons', { maxAge: '1d' }));
+
 // Work out who is logged in before any route runs
 app.use(require('./auth')(db));
 
