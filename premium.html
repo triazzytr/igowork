@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="IGOwork">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<title>IGOwork - Premium</title>
+<style>
+:root{--bg:#f5f5f7;--surface:#fff;--surface-2:#f0f0f2;--text:#1d1d1f;--muted:#6e6e73;--accent:#0071e3;--line:rgba(0,0,0,.07);--shadow:0 1px 2px rgba(0,0,0,.04),0 10px 28px rgba(0,0,0,.06);--ease:cubic-bezier(.4,0,.2,1)}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--surface:#1c1c1e;--surface-2:#242426;--text:#f5f5f7;--muted:#98989d;--line:rgba(255,255,255,.08);--shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.45)}}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.72);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--line)}
+@media(prefers-color-scheme:dark){header{background:rgba(28,28,30,.72)}}
+.nav{max-width:680px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:10px}
+.mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#0071e3,#5856d6);display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;flex:none}
+.brand{font-size:17px;font-weight:600}
+.acct{margin-left:auto;font-size:13px;color:var(--muted);text-align:right;line-height:1.4}
+.acct a{color:var(--accent);text-decoration:none;font-weight:500}
+.wrap{max-width:680px;margin:0 auto;padding:40px 20px 80px}
+h1{font-size:32px;font-weight:700;letter-spacing:-.02em;margin:0}
+.lede{color:var(--muted);font-size:16px;margin:8px 0 28px}
+.plan{background:var(--surface);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:26px 24px}
+.tag{display:inline-block;padding:3px 11px;border-radius:999px;font-size:12px;font-weight:700;background:rgba(255,159,10,.16);color:#d98200}
+.price{margin-top:14px;font-size:38px;font-weight:700;letter-spacing:-.03em}
+.per{font-size:15px;font-weight:500;color:var(--muted);letter-spacing:0}
+.perks{list-style:none;padding:0;margin:18px 0 6px}
+.perks li{position:relative;padding:8px 0 8px 28px;font-size:15px;line-height:1.4}
+.perks li:before{content:"\2713";position:absolute;left:0;top:8px;width:20px;height:20px;border-radius:50%;background:rgba(52,199,89,.15);color:#248a3d;font-size:12px;font-weight:700;display:grid;place-items:center;line-height:20px;text-align:center}
+.status{margin:16px 0 14px;font-size:14px;font-weight:600}
+.btn{appearance:none;border:0;border-radius:980px;padding:13px 24px;font-size:15px;font-weight:600;cursor:pointer;background:var(--accent);color:#fff;transition:transform .15s var(--ease),opacity .15s var(--ease)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.45;cursor:default}
+.banner{margin:14px 0 0;font-size:13px;color:var(--muted)}
+#msg{margin:12px 0 0;min-height:20px;font-size:14px;font-weight:600}
+.free{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px 22px;font-size:14px}
+.free p{margin:6px 0 0;color:var(--muted)}
+.fine{margin:18px 4px 0;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header><div class="nav"><div class="mark">IG</div><div class="brand">IGOwork</div>
+  <div class="acct"><a href="/dashboard">Dashboard</a></div>
+</div></header>
+
+<div class="wrap">
+  <h1>IGOwork Premium</h1>
+  <p class="lede">For artisans who want to stand out.</p>
+
+  <div class="plan">
+    <span class="tag">Premium</span>
+    <div class="price"><span id="price"></span><span class="per" id="per"></span></div>
+    <ul class="perks" id="perks"></ul>
+    <p class="status" id="status"></p>
+    <button class="btn" id="buy" disabled>Loading...</button>
+    <p class="banner" id="banner"></p>
+    <p id="msg"></p>
+  </div>
+
+  <div class="free"><b>Free plan</b><p id="freenote"></p></div>
+  <p class="fine">Premium adds a badge. It never changes your place in the Recommended order.</p>
+</div>
+
+<script>
+var $ = function (id) { return document.getElementById(id); };
+
+function naira(n) { return '\u20A6' + Number(n).toLocaleString('en-NG'); }
+function fmt(iso) {
+  return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+}
+function li(text) {
+  var e = document.createElement('li');
+  e.textContent = text;
+  return e;
+}
+function say(text, bad) {
+  $('msg').textContent = text;
+  $('msg').style.color = bad ? '#ff3b30' : 'inherit';
+}
+
+function render(j) {
+  $('price').textContent = naira(j.price);
+  $('per').textContent = ' / ' + j.period_days + ' days';
+
+  var perks = $('perks');
+  perks.textContent = '';
+  perks.appendChild(li('A Premium badge next to your name in search results'));
+  perks.appendChild(li(j.cap.enforced
+    ? 'Accept unlimited jobs every month (free accounts: up to ' + j.cap.limit + ')'
+    : 'No monthly job limit (free accounts may get one later)'));
+
+  $('status').textContent = j.premium
+    ? 'Premium is active until ' + fmt(j.premium_until) + '.'
+    : "You're on the free plan.";
+
+  var buy = $('buy');
+  if (j.test_mode) {
+    buy.disabled = false;
+    buy.textContent = j.premium ? 'Extend by ' + j.period_days + ' days' : 'Get Premium';
+    $('banner').textContent = 'Test mode: no real money is taken.';
+  } else {
+    buy.disabled = true;
+    buy.textContent = 'Checkout opens soon';
+    $('banner').textContent = '';
+  }
+
+  $('freenote').textContent = j.cap.enforced
+    ? 'Profile, requests, chat and ratings, plus up to ' + j.cap.limit + ' accepted jobs a month (' + j.cap.used + ' used this month).'
+    : 'Profile, requests, chat and ratings, with no monthly job limit for now.';
+}
+
+$('buy').onclick = function () {
+  $('buy').disabled = true;
+  say('', false);
+  fetch('/api/premium/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: '{}'
+  })
+    .then(function (r) { return r.json(); })
+    .then(function (j) {
+      if (j.error) { say(j.error, true); $('buy').disabled = false; return; }
+      say(j.message, false);
+      render(j);
+    })
+    .catch(function () {
+      say('Could not reach the server.', true);
+      $('buy').disabled = false;
+    });
+};
+
+fetch('/api/premium')
+  .then(function (r) {
+    if (r.status === 401) { location.href = '/login'; return null; }
+    if (r.status === 403) { location.href = '/app'; return null; }
+    return r.json();
+  })
+  .then(function (j) {
+    if (!j) return;
+    if (j.error) { say(j.error, true); return; }
+    render(j);
+  })
+  .catch(function () { say('Could not reach the server.', true); });
+</script>
+<script src="/notify.js"></script>
+</body>
+</html>

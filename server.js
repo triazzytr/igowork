@@ -69,12 +69,15 @@ app.get('/api/search', (req, res) => {
     radiusKm: req.query.radius ? parseFloat(req.query.radius) : 3,
   });
 
+  // Mark Premium artisans, and keep private details (exact location, internal ids) out of the list
+  require('./subscriptions').annotate(db, results);
   res.json({ count: results.length, artisans: results });
 });
 
 app.use(require('./notifications')(db));
 app.use(require('./push')(db));
 app.use(require('./dashboard')(db));
+app.use(require('./subscriptions')(db));
 app.use(require('./bookings')(db));
 app.use(require('./ratings')(db));
 app.use(require('./chat')(db));
