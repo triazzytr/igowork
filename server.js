@@ -70,6 +70,7 @@ app.get('/api/search', (req, res) => {
   });
 
   // Mark Premium artisans, and keep private details (exact location, internal ids) out of the list
+  require('./photos').annotate(db, results);
   require('./subscriptions').annotate(db, results);
   res.json({ count: results.length, artisans: results });
 });
@@ -77,6 +78,7 @@ app.get('/api/search', (req, res) => {
 app.use(require('./notifications')(db));
 app.use(require('./push')(db));
 app.use(require('./dashboard')(db));
+app.use(require('./photos')(db));
 app.use(require('./subscriptions')(db));
 app.use(require('./bookings')(db));
 app.use(require('./ratings')(db));

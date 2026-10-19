@@ -55,7 +55,7 @@ h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute
 </head>
 <body>
 <header><div class="nav"><div class="mark">IG</div><div class="brand">IGOwork</div>
-  <div class="acct"><span id="name"></span> <span class="badge">Artisan</span><br><a href="#" id="logout">Log out</a></div>
+  <div class="acct"><span id="name"></span> <span class="badge">Artisan</span><br><a href="/profile">Profile</a> &middot; <a href="#" id="logout">Log out</a></div>
 </div></header>
 
 <div class="wrap">
@@ -99,7 +99,9 @@ function loadProfile() {
 }
 
 function card(b) {
-  var html = '<div class="card"><div class="jtitle">' + esc(b.title) + '</div><div class="jmeta">Client: ' + esc(b.client_name) + '</div>';
+  // The client photo shows once the request has been accepted
+  var pic = b.status === 'pending' ? '' : '<img src="/api/bookings/' + b.id + '/photo" alt="" onerror="this.remove()" style="width:40px;height:40px;border-radius:50%;object-fit:cover;float:right;margin-left:12px">';
+  var html = '<div class="card">' + pic + '<div class="jtitle">' + esc(b.title) + '</div><div class="jmeta">Client: ' + esc(b.client_name) + '</div>';
   if (b.status === 'pending') {
     html += '<div class="row"><button class="btn" data-act="accept" data-id="' + b.id + '">Accept</button>' +
       '<button class="btn danger" data-act="decline" data-id="' + b.id + '">Decline</button></div>';

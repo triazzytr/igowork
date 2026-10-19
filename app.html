@@ -59,6 +59,7 @@ select{font:inherit;font-size:13px;font-weight:600;color:var(--text);background:
 .links{display:flex;gap:18px;margin-top:44px}
 .links a{color:var(--accent);text-decoration:none;font-size:14px;font-weight:500}
 .prem{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;vertical-align:middle;background:rgba(255,159,10,.16);color:#d98200}
+.avatar{overflow:hidden}.avatar img{width:100%;height:100%;object-fit:cover;display:block}
 </style>
 </head>
 <body>
@@ -97,7 +98,7 @@ select{font:inherit;font-size:13px;font-weight:600;color:var(--text);background:
   <div id="status"></div>
   <div id="results"></div>
 
-  <div class="links"><a href="/login">Account</a><a href="/bookings">My jobs</a></div>
+  <div class="links"><a href="/profile">Profile</a><a href="/bookings">My jobs</a></div>
 </div>
 
 <div id="sheetbg">
@@ -157,7 +158,7 @@ function render() {
     return;
   }
   $('results').innerHTML = list.map(function (a) {
-    return '<div class="result"><div class="rtop"><div class="avatar">' + esc(initials(a.full_name)) + '</div>' +
+    return '<div class="result"><div class="rtop"><div class="avatar">' + (a.photo_url ? '<img src="' + esc(a.photo_url) + '" alt="">' : esc(initials(a.full_name))) + '</div>' +
       '<div><div class="rname">' + esc(a.full_name) + (a.is_premium ? ' <span class="prem">Premium</span>' : '') + '</div><div class="rtrade">' + esc(a.trade_category) + '</div></div>' +
       '<div class="rrating">' + rating(a) + '</div></div>' +
       '<div class="rfacts"><span>' + a.years_of_experience + ' yrs experience</span>' +
@@ -222,7 +223,7 @@ $('send').onclick = function () {
 fetch('/api/me').then(function (r) { return r.json(); }).then(function (j) {
   var a = j.account;
   $('acct').innerHTML = a
-    ? esc(a.full_name) + ' <span style="font-weight:700;color:var(--accent)">&middot; ' + a.role + '</span><br><a href="/login">Account</a>'
+    ? esc(a.full_name) + ' <span style="font-weight:700;color:var(--accent)">&middot; ' + a.role + '</span><br><a href="/profile">Profile</a>'
     : '<a href="/login">Log in</a>';
 });
 

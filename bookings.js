@@ -93,7 +93,7 @@ h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute
   <section><h2>In progress</h2><div id="active"></div></section>
   <section><h2>Completed</h2><div id="done"></div></section>
 
-  <div class="links"><a href="/app">Find artisans</a><a href="#" id="logout">Log out</a></div>
+  <div class="links"><a href="/app">Find artisans</a><a href="/profile">Profile</a><a href="#" id="logout">Log out</a></div>
 </div>
 
 <div class="wrap" id="loggedout">
@@ -127,7 +127,7 @@ function pill(status) {
 
 function card(b) {
   var html = '<div class="card"><div class="jtop"><div class="jtitle">' + esc(b.title) + '</div>' + pill(b.status) + '</div>' +
-    '<div class="jmeta">Artisan: ' + esc(b.artisan_name) + '</div>';
+    '<div class="jmeta"><img src="/api/bookings/' + b.id + '/photo" alt="" onerror="this.remove()" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px">Artisan: ' + esc(b.artisan_name) + '</div>';
 
   if (b.status === 'pending') {
     html += '<div class="note">Waiting for the artisan to respond.</div>';
