@@ -29,6 +29,7 @@ module.exports = function (db) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="IGOwork">
@@ -80,7 +81,7 @@ h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute
 </style>
 </head>
 <body>
-<header><div class="nav"><div class="mark">IG</div><div class="brand">IGOwork</div>
+<header><div class="nav"><a href="/app" style="display:flex;align-items:center;flex:none"><picture><source srcset="/brand/logo-wordmark-dark.png" media="(prefers-color-scheme: dark)"><img src="/brand/logo-wordmark.png" alt="IGOwork" style="height:30px;width:auto;display:block"></picture></a>
   <div class="acct" id="acct"></div>
 </div></header>
 

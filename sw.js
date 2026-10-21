@@ -13,6 +13,7 @@ self.addEventListener('push', function (event) {
 
   event.waitUntil(self.registration.showNotification(data.title || 'IGOwork', {
     body: data.body || '',
+    icon: '/icons/icon-192.png',
     tag: data.tag || undefined,       // alerts with the same tag replace each other
     renotify: !!data.tag,
     data: { url: data.url || '/' }

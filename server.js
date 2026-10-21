@@ -18,6 +18,7 @@ app.get('/manifest.webmanifest', (req, res) => {
   res.sendFile(__dirname + '/manifest.webmanifest');
 });
 app.use('/icons', express.static(__dirname + '/icons', { maxAge: '1d' }));
+app.use('/brand', express.static(__dirname + '/brand', { maxAge: '1d' }));
 
 // Work out who is logged in before any route runs
 app.use(require('./auth')(db));
