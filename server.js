@@ -20,6 +20,14 @@ app.get('/manifest.webmanifest', (req, res) => {
 app.use('/icons', express.static(__dirname + '/icons', { maxAge: '1d' }));
 app.use('/brand', express.static(__dirname + '/brand', { maxAge: '1d' }));
 
+// Phones and browsers often ask for these addresses directly
+app.get(['/apple-touch-icon.png', '/apple-touch-icon-precomposed.png'], (req, res) => {
+  res.sendFile(__dirname + '/icons/apple-touch-icon.png');
+});
+app.get('/favicon.ico', (req, res) => {
+  res.type('png').sendFile(__dirname + '/icons/favicon-32.png');
+});
+
 // Work out who is logged in before any route runs
 app.use(require('./auth')(db));
 
